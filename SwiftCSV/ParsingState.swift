@@ -12,6 +12,10 @@ fileprivate extension Character {
     }
 }
 
+public enum CSVError: Error {
+    case parseError(String)
+}
+
 /// State machine of parsing CSV contents character by character.
 struct ParsingState {
 
@@ -36,7 +40,7 @@ struct ParsingState {
         self.finishField = finishField
     }
 
-    mutating func change(_ char: Character) {
+    mutating func change(_ char: Character) throws {
         if atStart {
             if char == "\"" {
                 atStart = false
@@ -56,7 +60,7 @@ struct ParsingState {
                     appendChar(char)
                     innerQuotes = false
                 } else {
-                    fatalError("Can't have non-quote here: \(char)")
+                    throw CSVError.parseError("Can't have non-quote here: \(char)")
                 }
             } else {
                 if char == "\"" {
@@ -91,7 +95,7 @@ struct ParsingState {
                     innerQuotes = false
                     finishRow()
                 } else {
-                    fatalError("Can't have non-quote here: \(char)")
+                    throw CSVError.parseError("Can't have non-quote here: \(char)")
                 }
             } else {
                 if char == "\"" {
